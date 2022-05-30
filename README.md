@@ -1,1 +1,1 @@
-# software-architecture-labs
+# Lab 2: Hazelcast Basics

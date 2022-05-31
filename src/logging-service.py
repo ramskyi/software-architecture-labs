@@ -1,18 +1,27 @@
+import sys
 from flask import Flask, request
+import hazelcast
 
 app = Flask(__name__)
-messages = {}
 
 
 @app.route('/logging', methods=['GET', 'POST'])
 def logging_requests():
+    client = hazelcast.HazelcastClient(cluster_members=["127.0.0.1:5701", "127.0.0.1:5702", "127.0.0.1:5703"])
+    message_dict = client.get_map('log-map').blocking()
     if request.method == 'GET':
-        return str(list(messages.values()))
+        return ', '.join(message_dict.values())
     if request.method == 'POST':
-        key, value = request.form.to_dict().popitem()
-        messages[key] = value
-        return {'status_code': 200}
+        uuid = request.form['id']
+        msg = request.form['msg']
+        print(f'ID: {uuid}\nMessage: {msg}')
+        message_dict.lock(uuid)
+        try:
+            message_dict.put(uuid, msg)
+        finally:
+            message_dict.unlock(uuid)
+        return 'return_str'
 
 
 if __name__ == '__main__':
-    app.run(port=8081)
+    app.run(port=int(sys.argv[1]))

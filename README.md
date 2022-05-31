@@ -3,16 +3,19 @@
 ## Requirements:
 - flask
 - requests
+- hazelcast
 ```
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## Usage:
-Run the services:
+Run the services with ports as arguments for loggers:
 ```
 python3 src/facade_service.py
-python3 src/logging_service.py
 python3 src/messages_service.py
+python3 src/logging_service.py 8082
+python3 src/logging_service.py 8083
+python3 src/logging_service.py 8084
 ```
 
 Send POST/GET requests (i.e. using curl):

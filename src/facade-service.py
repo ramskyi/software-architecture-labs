@@ -1,5 +1,6 @@
 from flask import Flask, request
 from requests import get, post
+from random import choice
 import uuid
 
 app = Flask(__name__)
@@ -7,14 +8,21 @@ app = Flask(__name__)
 
 @app.route('/facade', methods=['GET', 'POST'])
 def requests():
-    log_url = 'http://localhost:8081/logging'
+    log_url = ('http://localhost:8082/logging', 'http://localhost:8083/logging', 'http://localhost:8084/logging')
     if request.method == 'GET':
-        message_url = 'http://localhost:8082/messages'
-        return 'Messages-service reply: ' + get(message_url).content.decode('utf-8') + '\n' \
-               + 'Logging-service reply: ' + get(log_url).content.decode('utf-8') + '\n'
+        message_url = 'http://localhost:8081/messages'
+
+        data = get(choice(log_url))
+        # response_log = get(choice(log_url)).text
+        response_log = data.text
+        response_message = get(message_url).text
+        return 'Messages-service reply: ' + response_message + '\n' \
+               + 'Logging-service reply: ' + response_log + '\n'
     if request.method == 'POST':
-        r = post(log_url, data={str(uuid.uuid4()): request.get_data()})
-        return str(r.status_code) + '\n'
+        message = request.get_data()
+        message_uuid = str(uuid.uuid4())
+
+        return post(choice(log_url), data={"id": message_uuid, "msg": message}).text
 
 
 if __name__ == '__main__':

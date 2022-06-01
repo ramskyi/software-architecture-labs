@@ -3,12 +3,12 @@ from flask import Flask, request
 import hazelcast
 
 app = Flask(__name__)
+client = hazelcast.HazelcastClient(cluster_members=["127.0.0.1:5701", "127.0.0.1:5702", "127.0.0.1:5703"])
+message_dict = client.get_map('log-map').blocking()
 
 
 @app.route('/logging', methods=['GET', 'POST'])
 def logging_requests():
-    client = hazelcast.HazelcastClient(cluster_members=["127.0.0.1:5701", "127.0.0.1:5702", "127.0.0.1:5703"])
-    message_dict = client.get_map('log-map').blocking()
     if request.method == 'GET':
         return ', '.join(message_dict.values())
     if request.method == 'POST':

@@ -9,7 +9,10 @@ pip3 install -r requirements.txt
 ```
 
 ## Usage:
-Run the services with ports as arguments for loggers:
+Start hazelcast nodes:
+```./hz start``` (3 times). 
+
+Then run the services with ports as arguments for loggers:
 ```
 python3 src/facade_service.py
 python3 src/messages_service.py 8081

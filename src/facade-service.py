@@ -12,9 +12,7 @@ def requests():
     if request.method == 'GET':
         message_url = 'http://localhost:8081/messages'
 
-        data = get(choice(log_url))
-        # response_log = get(choice(log_url)).text
-        response_log = data.text
+        response_log = get(choice(log_url)).text
         response_message = get(message_url).text
         return 'Messages-service reply: ' + response_message + '\n' \
                + 'Logging-service reply: ' + response_log + '\n'

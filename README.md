@@ -12,9 +12,11 @@ pip3 install -r requirements.txt
 Start hazelcast nodes:
 ```./hz start``` (3 times). 
 
-Then run the services with ports as arguments for loggers:
+Then start consul using script ```./scripts/start-consul.sh``` 
+
+Afterwards, run the services with ports as arguments for services:
 ```
-python3 src/facade_service.py
+python3 src/facade_service.py 8080
 python3 src/messages_service.py 8081
 python3 src/messages_service.py 8082
 python3 src/logging_service.py 8083
@@ -29,6 +31,8 @@ curl -X POST http://localhost:8080/facade -d "Your message"
 
 curl -X GET http://localhost:8080/facade
 ```
+
+You may finish stop consul with ```./scripts/stop-consul.sh```
 
 ## Results:
 

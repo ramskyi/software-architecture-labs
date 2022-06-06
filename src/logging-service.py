@@ -1,10 +1,15 @@
 import sys
 from flask import Flask, request
+import uuid
 import hazelcast
+import consul
+
+session = consul.Consul(host='localhost', port=8500)
+session.agent.service.register('logging-service', port=int(sys.argv[1]), service_id='l'+str(uuid.uuid4()))
 
 app = Flask(__name__)
 client = hazelcast.HazelcastClient(cluster_members=['127.0.0.1:5701', '127.0.0.1:5702', '127.0.0.1:5703'])
-msg_dict = client.get_map('msg-dict').blocking()
+msg_dict = client.get_map(session.kv.get('map')[1]['Value'].decode("utf-8")).blocking()
 
 
 @app.route('/logging', methods=['GET', 'POST'])

@@ -1,0 +1,2 @@
+docker stop consul_botanich
+docker rm consul_botanich

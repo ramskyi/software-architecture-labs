@@ -1,23 +1,35 @@
 from flask import Flask, request
 from requests import get, post
 from random import choice
+import sys
 import uuid
 import hazelcast
+import consul
+
+session = consul.Consul(host='localhost', port=8500)
+session.agent.service.register('facade-service', port=int(sys.argv[1]), service_id=f"f{str(uuid.uuid4())}")
+services = session.agent.services()
 
 app = Flask(__name__)
 
-log_url = ('http://localhost:8083/logging', 'http://localhost:8084/logging', 'http://localhost:8085/logging')
-msg_url = ('http://localhost:8081/messages', 'http://localhost:8082/messages',)
+log_clients = []
+msg_clients = []
+for key in services:
+    link_pref = 'http://localhost:' + str(services[key]['Port']) + '/'
+    if key[0] == 'l':
+        log_clients.append(link_pref + 'logging')
+    elif key[0] == 'm':
+        msg_clients.append(link_pref + 'messages')
 
-client = hazelcast.HazelcastClient(cluster_members=["127.0.0.1:5701", "127.0.0.1:5702", "127.0.0.1:5703"])
-msq_q = client.get_queue("message-queue").blocking()
+client = hazelcast.HazelcastClient(cluster_members=session.kv.get('hazel-ports')[1]['Value'].decode("utf-8").split())
+msq_q = client.get_queue(session.kv.get('queue')[1]['Value'].decode("utf-8")).blocking()
 
 
 @app.route('/facade', methods=['GET', 'POST'])
 def requests():
     if request.method == 'GET':
-        response_log = get(choice(log_url)).text
-        response_msg = get(choice(msg_url)).text
+        response_log = get(choice(log_clients)).text
+        response_msg = get(choice(msg_clients)).text
         return 'Messages-service reply: ' + response_msg + '\n' \
                + 'Logging-service reply: ' + response_log + '\n'
     if request.method == 'POST':
@@ -25,8 +37,8 @@ def requests():
         msq_q.put(str(message))
         msg_uuid = str(uuid.uuid4())
 
-        return post(choice(log_url), data={"id": msg_uuid, "msg": message}).text
+        return post(choice(log_clients), data={"id": msg_uuid, "msg": message}).text
 
 
 if __name__ == '__main__':
-    app.run(port=8080)
+    app.run(port=int(sys.argv[1]))
